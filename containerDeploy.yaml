@@ -9,7 +9,7 @@
     apt: name=docker.io state=latest
 
   - name: Remove Existing Container
-    command: "docker rm {{ containerName }}"
+    command: "docker rm -f {{ containerName }}"
     ignore_errors: true
 
   - name: Performing Deployment of {{ dockerImageTag }}
