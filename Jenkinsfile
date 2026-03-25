@@ -44,22 +44,36 @@ node {
         }
     }
 
-    stage('Deploy using Ansible (AWS + Azure)'){
-        echo 'Deploying to AWS and Azure'
+    // 🔥 AWS Deployment (SSH Key)
+    stage('Deploy AWS'){
+        echo 'Deploying to AWS'
 
-        withCredentials([
-            string(credentialsId: 'azure-pass', variable: 'AZ_PASS'),
-            file(credentialsId: 'aws-key', variable: 'SSH_KEY')
-        ]) {
+        sh """
+        export ANSIBLE_HOST_KEY_CHECKING=False
 
+        ansible-playbook -i inventory.yaml containerDeploy.yaml \
+        --limit aws \
+        -e httpPort=${httpPort} \
+        -e containerName=${containerName} \
+        -e dockerImageTag=${dockerHubUser}/${containerName}:${tag} \
+        -e key_pair_path=/var/lib/jenkins/server.pem \
+        --become
+        """
+    }
+
+    // 🔐 Azure Deployment (Password)
+    stage('Deploy Azure'){
+        echo 'Deploying to Azure'
+
+        withCredentials([string(credentialsId: 'azure-pass', variable: 'AZ_PASS')]) {
             sh """
             export ANSIBLE_HOST_KEY_CHECKING=False
 
             ansible-playbook -i inventory.yaml containerDeploy.yaml \
+            --limit azure \
             -e httpPort=${httpPort} \
             -e containerName=${containerName} \
             -e dockerImageTag=${dockerHubUser}/${containerName}:${tag} \
-            -e key_pair_path=${SSH_KEY} \
             -e ansible_password=${AZ_PASS} \
             --become
             """
