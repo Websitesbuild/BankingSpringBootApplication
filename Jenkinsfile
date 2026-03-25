@@ -80,14 +80,6 @@ node {
         }
     }
 
-    stage('Verify Deployment'){
-        echo 'Checking running containers'
-
-        sh """
-        ansible all -i inventory.yaml -a "docker ps"
-        """
-    }
-
     stage('Cleanup'){
         echo 'Cleaning unused Docker images'
         sh "docker system prune -f || true"
